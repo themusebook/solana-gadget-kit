@@ -1,99 +1,149 @@
+<!--
+Copyright (c) Meta Platforms, Inc. and affiliates.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
 # Solana Gadget Kit
 
-The round screen asks. You press. Then, and only then, the arm may move.
+<p align="center">
+  <a href="https://hardware.musebook.trade">
+    <img src="site/hero.svg" width="1200" alt="Solana Gadget Kit. A round 240 by 240 LCD cycles through home, review, applied, and refused while a neon bezel spins.">
+  </a>
+</p>
 
-![A pixel badge winks through home, review, and a physical press, then the servo ticks to 15](docs/hero.gif)
+<p align="center">
+  <a href="https://hardware.musebook.trade"><strong>hardware.musebook.trade</strong></a>
+  ·
+  <a href="https://github.com/themusebook/solana-gadget-kit">github.com/themusebook/solana-gadget-kit</a>
+</p>
 
-That loop is the whole desk in one breath. Home, a wink, review, a physical press, a signature, and the servo marked 15. Early frames leave the arm down. `15` stays dim until the press lands.
+Hardware that waits for Solana. This tree starts from the Muse ESP32 round-LCD
+gadget SDK and the Linux gadget SDK. The 240×240 glass reviews a command.
+Beyond the LCD, a robotics motion is applied only when a Solana confirmation
+for that exact command is present. A missing, expired, cancelled, or different
+command leaves the actuator still.
 
-This checkout is the Muse gadget tree plus five host programs you can run on a computer. The programs do not flash a board, open a network connection, or spend a funded key. Build them here, in this directory.
+The on-device hardware wallet generates an Ed25519 key, refuses to export the
+secret, and signs only after a physical confirm inside a bounded window.
+[Pocket Wallet](pocket-wallet) is the separate phone-approval gadget: web, API,
+firmware, Linux companion, Cloudflare proxy, scripts, and docs. A physical
+press still cannot sign or submit.
 
-## What lives here
-
-| Path | What it is |
+| Surface | What it does |
 |---|---|
-| `examples/hardware_wallet.c` | Host program `hardware_wallet`. Refuses secret export. Signs only after a physical confirm. |
-| `examples/lcd_status.c` | Host program `lcd_status`. Frames are home, review, expired, and cancelled at 240×240. |
-| `examples/robotics_gate.c` | Host program `robotics_gate`. Applies `servo:15` only for a matching in-window `arm.nudge`. |
-| `examples/solana_os_check.c` | Host program `solana_os_check`. Checks a Solana OS 0.4.4 directory against `SHA256SUMS`. |
-| `examples/portfolio_preview.c` | Host program `portfolio_preview`. Fixed quote: 10000000 lamports, 2500000 USDC base units, minimum out 980000. |
-| `src/` and `include/` | Host library behind those programs: wallet, LCD review, robotics gate, portfolio preview, SHA-256, and the confirmation record. |
-| `tests/host_test.c` | `make test` runs this file. It checks the same confirm, export, LCD, and robotics rules. |
-| `esp32/` | ESP32 device SDK. |
-| `linux/` | Linux device SDK. The Muse gadget link, not the Modulino bus below. |
-| `android/musegadgetstest/` | Android test app. It streams video to a gadget display. |
-| `musegadgetstest/` | iOS test app. Same job, on iPhone. |
-| `dashboard/` | Offline 240×240 review page, `dashboard/index.html`. |
-| `web-flasher/` | Browser installer: `index.html`, `boards.json`, `flasher-hooks.js`, `paced-serial.js`, `sdk-token.js`, and `make_manifest.py`. |
-| `docs/solana-os.md` | Flash note for the BP26 badge. It still names `firmware/solana-os/0.4.4`. |
-| `scripts/flash-solana-os.sh` | Terminal flash script. It still resolves `firmware/solana-os/0.4.4`. |
-| `0.4.4/` | Prebuilt Solana OS 0.4.4 images for the BP26 badge, plus `SHA256SUMS`. |
-| `.github/` | Only `modernize/java-upgrade`. This checkout has no `.github/workflows/esp32.yml`. |
-| `.vscode/settings.json` | Editor setting. CMake's source directory is `esp32/`. |
+| [Live page](https://hardware.musebook.trade) | Animated Solana hardware home. The LCD and servo on that page are a demo. They do not sign or move a real board. |
+| [On-device wallet](solana) | Host example. Secret export is refused. The signature verifies only for the confirmed payload. |
+| [Robotics gate](solana) | `servo:15` is applied only for a matching confirmation. |
+| [240×240 review](solana/dashboard/index.html) | Home, review summary, expired, cancelled. |
+| [Solana OS 0.4.4](docs/solana-os.md) | Badge bundle. [scripts/flash-solana-os.sh](scripts/flash-solana-os.sh) flashes the BP26 badge. [web-flasher](web-flasher) installs firmware from Chrome or Edge. |
+| [ESP32 Device SDK](esp32) | Firmware that joins Wi-Fi and pairs with the Muse app. Board notes are in [esp32/devices](esp32/devices). |
+| [Linux Device SDK](linux) | A Raspberry Pi, or another Linux machine with Bluetooth LE, as a Muse gadget. |
+| [Android test app](android/musegadgetstest) | Streams camera, color bars, or a clip to a gadget display. |
+| [iPhone test app](ios/musegadgetstest) | The same test on iOS 17, in Swift. |
+| [Badge images](firmware/solana-os/0.4.4) | Prebuilt Solana OS 0.4.4 binaries, checksums, and flash args. |
+| [Flash note](docs/solana-os.md) | Terminal steps for the BP26 badge. |
 
-`tests/readme_check.py` reads this file and `docs/hero.gif` from disk.
+[skills](skills/CATALOG.md) is the community device catalog. Those skills are
+not official Muse product integrations. This README, [LICENSE](LICENSE),
+[CONTRIBUTING.md](CONTRIBUTING.md), and
+[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) are the project documents.
+Host-testable examples live in [solana](solana). Upstream Muse copyright and
+Apache-2.0 notices stay in place.
 
-## Build and run
+## Muse Gadgets
 
-From this directory:
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset=".github/images/muse-gadgets-dark.png">
+    <img src=".github/images/muse-gadgets-light.png" width="900" alt="Muse gadgets: a Waveshare round AMOLED, an M5Stack StickS3, Muse Home Link, a Raspberry Pi and a Seeed reTerminal e-ink display">
+  </picture>
+</p>
 
-```sh
-make test
-make examples
-./build/hardware_wallet
-./build/lcd_status
-./build/robotics_gate
-./build/portfolio_preview
-./build/solana_os_check 0.4.4
-```
+Muse gadgets are open source devices you build yourself. Program an
+off-the-shelf ESP32 board or set up a Raspberry Pi with our device SDKs, then
+connect Muse to your displays, buttons, sensors, actuators, and whatever else
+you've got lying on your workbench.
 
-`./build/solana_os_check` with no arguments is not the success case. With no path, `examples/solana_os_check.c` looks for `firmware/solana-os/0.4.4` and `../firmware/solana-os/0.4.4`. Point the checker at `0.4.4`.
+We open sourced the SDKs and firmware here. It's built by hackers, for hackers,
+just for fun. Side effects of tinkering may include bricked boards, voided
+warranties, brownouts, or bankruptcies. Proceed at your own risk!
 
-The Makefile compiles Pocket Wallet from the sibling directory `../pocket-wallet` (`-I../pocket-wallet/firmware/components/pocket_wallet`). That sibling stays outside this tree.
-
-The demo seed `solana-gadget-kit-hw-wallet-seed` is not a funded key. It is the 32-byte text the host wallet uses so the same payload signs the same way on every run. Secret export is refused. A signature is produced only after a physical confirm.
-
-Primary lines from those five programs:
-
-```text
-secret_export=refused
-240x240 REVIEW transfer 0.01 SOL
-WALLET signature=9d9ec360e8aa31b6cd914e49b06dc6d2284b36148bf173138c3ea843c098e63fcfce2e91895c6de3b68ae43aba6e82941c81c3948452fc012cdce89803bcd00f confirmed_verify=ok unconfirmed=refused
-LCD 240x240 HOME
-LCD 240x240 REVIEW pay 0.01 SOL for 1 USDC
-LCD 240x240 EXPIRED
-LCD 240x240 CANCELLED
-LCD frames=home,review,expired,cancelled size=240x240
-ROBOTICS match=applied mismatch=refused expired=refused cancelled=refused missing=refused
-PORTFOLIO sol=0.010000000 usdc=2.500000 quote_min_out=0.980000 venue=fixture
-SOLANA_OS 0.4.4 checksums=ok files=4
-```
-
-LCD frames are home, review, expired, and cancelled at 240×240. Robotics applies `servo:15` only for a matching in-window `arm.nudge` and refuses mismatch, expiry, cancel, and a missing confirmation. Portfolio preview is the fixed quote (10000000 lamports, 2500000 USDC base units, minimum out 980000).
-
-## Where the BP26 images actually are
-
-The four images and `SHA256SUMS` live in `0.4.4/`:
-
-| Offset | File |
+| | |
 |---|---|
-| `0x2000` | `bootloader.bin` |
-| `0x8000` | `partition-table.bin` |
-| `0xf000` | `ota_data_initial.bin` |
-| `0x20000` | `solana_os.bin` |
+| [**ESP32 Device SDK**](esp32) | Connect your ESP32 board to Muse through our open source SDK. Throw in a screen to show images, add audio in and out, or wire up other sensors. |
+| [**Linux Device SDK**](linux) | Turn that spare Raspberry Pi or Linux box into a Muse gadget. Hack in your own commands to let Muse handle sysadmin chores or your Home Assistant setup. |
+| [**Muse Gadgets Test**](android/musegadgetstest) ([iPhone](ios/musegadgetstest)) | Stream your phone's camera, or a clip, to an ESP32 gadget's screen over Wi-Fi: H.264 or VP8 decoded on the board, 30 fps on the round 466 px boards. [`protocols/VIDEO.md`](protocols/VIDEO.md) explains how. |
 
-`examples/solana_os_check.c`, `scripts/flash-solana-os.sh`, and `docs/solana-os.md` still look for `firmware/solana-os/0.4.4`. That directory is not in this checkout. Checksums succeed when you pass `0.4.4` yourself. The badge notes in `0.4.4/README.txt` are the image list and the esptool line for a Solana BP26 (ESP32-C5, CH340). This README does not retarget the script or the checker.
+Before you flash or pair a gadget, get an
+[SDK token](https://gadgets.muse.ai/settings/sdk-tokens) and review the
+[Gadget SDK Terms](https://gadgets.muse.ai/sdk-terms). Every gadget needs a
+token to pair.
 
-## SolanaOS, kept next door
+ESP32 and Linux gadgets pair with the Muse app on iOS and Android, via
+Settings > Devices. Turn on Developer mode there first, then look for devices
+prefixed with "MuseGadget".
+Each directory has a `README.md` to get started and an `AGENTS.md` for coding
+agents like [Muse Code](https://developer.meta.com/ai/lp/muse-code/).
 
-Integrate [SolanaOS](https://github.com/themusebook/solanaos) without merging trees. SolanaOS stays the Go local-first trading runtime. Its module path is `github.com/x402agent/Solana-Os-Go`. Do not merge the trees. Do not vendor SolanaOS.
+For battery-input power profiling, see the [porting recipe](esp32/docs/power/README.md).
+The opt-in diagnostic core is board-neutral; boards supply its hooks and state
+matrices, and [power_sweep.py](esp32/tools/power/power_sweep.py) drives the
+USB-free sweep. The isolated diagnostic does not pair or need an SDK token;
+fixture safety and explicit hardware authorization still come first, as the
+[PPK2 rules](esp32/docs/power/ppk2.md) describe.
 
-Its `solanaos hardware` commands drive an Arduino Modulino I2C cluster on Linux: distance 0x29, buzzer 0x3C, thermo 0x44, movement 0x6A, pixels 0x6C, knob 0x76, buttons 0x7C. That cluster is not the Muse ESP32/Linux gadget link and not the BP26 badge. Those buses are not the same protocol.
+## Solana OS for the Solana BP26 badge
 
-Use each one for the job it already has:
+Prebuilt Solana OS 0.4.4 firmware, how to flash it, and how to hand a badge
+off to a new owner: [docs/solana-os.md](docs/solana-os.md).
 
-- SolanaOS keeps trading, the local Go process, and `solanaos hardware` on the Modulino I2C bus (scan, test, monitor, demo).
-- This kit is the review/sign peripheral: no secret export, a signature only after a physical confirm, a 240×240 review, and the robotics gate. A SolanaOS command that needs a signature or a motion stops at `gadget_wallet_review` until `gadget_wallet_confirm` sees the physical edge. Mismatch, expiry, cancel, and a missing confirmation do not move the servo.
-- The prebuilt Solana OS 0.4.4 flash in `0.4.4/` is a separate BP26 image set. It is not the Modulino cluster and not the host wallet.
+## Community
 
-No Go bridge is added here. The host programs above are the boundary you can run before any board is attached.
+Meet other hackers who are building and customizing Muse gadgets in our
+community [Discord](https://discord.gg/3bhjCkZdd6). Get inspired, support each
+other, and share what you make.
+
+## License
+
+Muse Gadgets is licensed under the Apache License, Version 2.0, found in
+[`LICENSE`](LICENSE), except for these third-party files, which keep their
+upstream licenses:
+
+| Path | Upstream | License |
+|---|---|---|
+| [`esp32/components/minimp3/include/minimp3.h`](esp32/components/minimp3) | [lieff/minimp3](https://github.com/lieff/minimp3) | CC0-1.0, see [`LICENSE`](esp32/components/minimp3/LICENSE) |
+| [`esp32/components/muse/boards/ostb_echoear_display_init.h`](esp32/components/muse/boards/ostb_echoear_display_init.h) | [78/xiaozhi-esp32 ESP-VoCat panel sequence](https://github.com/78/xiaozhi-esp32/blob/0d576d3d4c049c6f55eaf879725dc23e516511b4/main/boards/espressif/esp-vocat/esp_vocat.cc) | MIT, retained in the file header |
+| JD9853A initialization sequence in [`board_seeed_xiao_s3_147.c`](esp32/components/muse/boards/board_seeed_xiao_s3_147.c) | [Seeed-Studio/Seeed_GFX2](https://github.com/Seeed-Studio/Seeed_GFX2) | MIT, see [`Seeed_GFX2.txt`](esp32/devices/licenses/Seeed_GFX2.txt) |
+| [`esp32/main/pixel_font.c`](esp32/main/pixel_font.c) | Adafruit GFX `glcdfont.c` | BSD-2-Clause, in the file header |
+| [`esp32/components/muse/eink/fonts/montserrat.ttf`](esp32/components/muse/eink/fonts) | Montserrat Medium, via LVGL v9.5.0 | SIL Open Font License 1.1 |
+| [`esp32/components/muse/eink/fonts/unscii.ttf`](esp32/components/muse/eink/fonts) | unscii-8 | Public domain |
+| [`esp32/components/muse/eink/fonts/symbols.ttf`](esp32/components/muse/eink/fonts) | Font Awesome 5 Free, via LVGL v9.5.0 | SIL Open Font License 1.1 (icons CC BY 4.0) |
+| [`esp32/main/epd_ssd1677.c`](esp32/main/epd_ssd1677.c) | Seeed-reTerminal-E10xx-Firmware's SSD1677 refresh sequence | MIT, retained in the file header |
+| [`esp32/components/tinyh264/src`](esp32/components/tinyh264) | the Android Open Source Project's H.264 decoder, via [udevbe/tinyh264](https://github.com/udevbe/tinyh264) | Apache-2.0, AOSP's copyright, see [`LICENSE`](esp32/components/tinyh264/LICENSE) |
+| [`esp32/components/libvpx_vp8/src`](esp32/components/libvpx_vp8) | [libvpx](https://chromium.googlesource.com/webm/libvpx) v1.16.0's VP8 decoder, trimmed | BSD-3-Clause, the WebM Project authors' copyright, see [`LICENSE`](esp32/components/libvpx_vp8/LICENSE), with Google's patent grant in [`PATENTS`](esp32/components/libvpx_vp8/PATENTS) |
+
+Dependencies fetched at build time are under their own licenses: ESP-IDF
+components (into `esp32/managed_components/`), and the simulator's LVGL and
+SDL (listed in [`esp32/simulator/THIRD_PARTY.md`](esp32/simulator/THIRD_PARTY.md)).
+
+The Apache License does not cover the [Jollybot avatar](esp32/avatar).
+
+Muse Gadgets Test's sample clips aren't in this repository: the app fetches a few
+seconds of the Blender Foundation's open movies (CC BY 3.0) when one is
+played, and shows their credits.
+
+Muse Gadgets Test can use x264 (GPL-2.0) on the phone; this repository carries none
+of its code. An APK or iPhone app you build with it is under the GPL
+([`android/musegadgetstest/README.md`](android/musegadgetstest/README.md),
+[`ios/musegadgetstest/README.md`](ios/musegadgetstest/README.md)).
